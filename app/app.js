@@ -1,3 +1,5 @@
 import modules from 'app/modules/modules.js';
-console.log(modules);
-//angular.module('app',[])
+angular.module('app', [
+    'ui.router',
+    modules.name
+])

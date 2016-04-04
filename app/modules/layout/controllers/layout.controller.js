@@ -1,10 +1,10 @@
 class layout{
 	constructor(){
 		this.text='layout';
-		alert(this.text);
+		
 	}
-	get(){
-
+	fn(){
+		alert(this.text);
 	}
 }
 
