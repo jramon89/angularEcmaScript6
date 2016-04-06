@@ -1,6 +1,6 @@
 class layout{
 	constructor(){
-		this.text='layout';
+		this.text='Layout';
 		
 	}
 	fn(){
