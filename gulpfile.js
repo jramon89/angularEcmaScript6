@@ -8,9 +8,8 @@ let gulp = require('gulp'),
     rollupPaths = require('rollup-plugin-includepaths'),
     sync = require('browser-sync')
 
-
 gulp.task('dist', function() {
-    let jsmin = gulp.src('app/app.js', { read: false })
+    var jsmin = gulp.src(['./app/*.js'])
         .pipe(rollup({
             sourceMap: true,
             format: 'cjs',
@@ -20,23 +19,18 @@ gulp.task('dist', function() {
         }))
         .pipe(babel())
         .pipe(concat('all.js'))
-        .pipe(gulp.dest('dist'))
+        .pipe(gulp.dest('./dist'))
 
-    return gulp.src('index.html')
-        .pipe(inject(jsmin, { name: 'bundle' }), { relative: true })
-        .pipe(gulp.dest('dist'))
+    return gulp.src('./index.html')
+        .pipe(inject(jsmin, { name: 'bundle', relative: true, ignorePath: 'dist' }))
+        .pipe(gulp.dest('./dist'))
 });
 
 gulp.task('watch', function() {
-    gulp.watch(['app/**/*.js', 'index.html'], ['dist']).on('change', sync.reload)
+    gulp.watch(['app/**/*.js'], ['dist']).on('change', sync.reload)
+    gulp.watch('./index.html',['dist']).on('change', sync.reload)
 });
 
-gulp.task('inject', function() {
-    gulp.src('./src/**/*.html')
-        .pipe(inject(gulp.src('./src/**/*.js', { read: false }), {name:'bundle'},{relative: true}))
-        .pipe(gulp.dest('./src'))
-
-})
 
 gulp.task('serve', ['dist'], function() {
     sync({
@@ -61,4 +55,19 @@ gulp.task('default', ['serve', 'watch'])
         .pipe(concat('all.js'))
         .pipe(gulp.dest('dist'))
 
-});*/
+});
+
+gulp.task('index', function() {
+    gulp.src('dist/index.html')
+        .pipe(inject(gulp.src('dist/all.js',{ read: false }), { name: 'bundle', relative: true }))
+        .pipe(gulp.dest('dist'))
+});
+
+*/
+
+// gulp.task('inject', function() {
+//     gulp.src('./src/**/*.html')
+//         .pipe(inject(gulp.src('./src/**/*.js', { read: false }), { name: 'bundle', relative: true }))
+//         .pipe(gulp.dest('./src'))
+
+// })
