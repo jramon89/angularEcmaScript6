@@ -1,34 +1,71 @@
 'use strict';
 let gulp = require('gulp'),
     inject = require('gulp-inject'),
+    uglify = require('gulp-uglify'),
     babel = require('gulp-babel'),
     concat = require('gulp-concat'),
+    series = require('stream-series'),
+    //event = require('event-stream'),
+    //source = require('vinyl-source-stream'),
     rollup = require('gulp-rollup'),
-    event = require('event-stream'),
+    //rollup = require('rollup'),
+    //rollupStream = require('rollup-stream'),
+    //rollupBabel = require('rollup-plugin-babel'),
     rollupPaths = require('rollup-plugin-includepaths'),
-    sync = require('browser-sync')
+    common = require('rollup-plugin-commonjs'),
+    npm = require('rollup-plugin-npm'),
+    //external = require('rollup-plugin-external'),
+    //resolve = require('rollup-plugin-node-resolve'),
+    sync = require('browser-sync'),
+    libs = require('./lib.paths.js')
+
+
+gulp.task('libs', function() {
+    let vendor = gulp.src(libs)
+        .pipe(concat('libs.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('./dist'))
+
+})
 
 gulp.task('dist', function() {
-    var jsmin = gulp.src(['./app/*.js'])
+
+    let vendor = gulp.src(libs)
+        .pipe(concat('libs.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('./dist'))
+
+    let app = gulp.src(['./app/*.js'])
         .pipe(rollup({
-            sourceMap: true,
             format: 'cjs',
             plugins: [
-                rollupPaths(['app'])
+                /*  resolve({
+                      jsnext: true,
+                      main: true
+                  }),*/
+                rollupPaths({
+                    external: [],
+                    globals: [],
+                    include: {},
+                    extensions: ['.js', '.json', '.html']
+                }),
+                npm(),
+                common()
             ]
         }))
         .pipe(babel())
-        .pipe(concat('all.js'))
+        .pipe(concat('app.js'))
+        .pipe(uglify())
         .pipe(gulp.dest('./dist'))
 
     return gulp.src('./index.html')
-        .pipe(inject(jsmin, { name: 'bundle', relative: true, ignorePath: 'dist' }))
+        .pipe(inject(series(vendor, app), { name: 'bundle', relative: true, ignorePath: 'dist' }))
         .pipe(gulp.dest('./dist'))
 });
 
 gulp.task('watch', function() {
     gulp.watch(['app/**/*.js'], ['dist']).on('change', sync.reload)
-    gulp.watch('./index.html',['dist']).on('change', sync.reload)
+    gulp.watch('./index.html', ['dist']).on('change', sync.reload)
 });
 
 
@@ -70,4 +107,16 @@ gulp.task('index', function() {
 //         .pipe(inject(gulp.src('./src/**/*.js', { read: false }), { name: 'bundle', relative: true }))
 //         .pipe(gulp.dest('./src'))
 
-// })
+// })}
+/*
+gulp.task('rollup', function() {
+    return rollupStream({
+            entry: './app/*.js'
+        })
+        .pipe(source('app.js'))
+        .pipe(babel())
+        .pipe(concat('all.js'))
+        .pipe(gulp.dest('./dist'))
+
+})
+*/
