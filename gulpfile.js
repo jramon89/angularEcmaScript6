@@ -49,8 +49,6 @@ gulp.task('dist', function() {
                     include: {},
                     extensions: ['.js', '.json', '.html']
                 }),
-                npm(),
-                common()
             ]
         }))
         .pipe(babel())
