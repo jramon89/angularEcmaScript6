@@ -14,6 +14,7 @@ let gulp = require('gulp'),
     rollupPaths = require('rollup-plugin-includepaths'),
     common = require('rollup-plugin-commonjs'),
     npm = require('rollup-plugin-npm'),
+    css = require('rollup-plugin-stylus-css-modules'),
     //external = require('rollup-plugin-external'),
     //resolve = require('rollup-plugin-node-resolve'),
     sync = require('browser-sync'),
@@ -35,20 +36,17 @@ gulp.task('dist', function() {
         .pipe(uglify())
         .pipe(gulp.dest('./dist'))
 
+    //let styles = ;
     let app = gulp.src(['./app/*.js'])
         .pipe(rollup({
             format: 'cjs',
             plugins: [
-                /*  resolve({
-                      jsnext: true,
-                      main: true
-                  }),*/
                 rollupPaths({
                     external: [],
                     globals: [],
-                    include: {},
-                    extensions: ['.js', '.json', '.html']
+                    include: {}
                 }),
+
             ]
         }))
         .pipe(babel())
@@ -56,8 +54,23 @@ gulp.task('dist', function() {
         .pipe(uglify())
         .pipe(gulp.dest('./dist'))
 
+    let style = gulp.src(['./app/*.js'])
+        .pipe(rollup({
+            plugins: [
+                rollupPaths(),
+                css({
+                    output: './dist/styles.css'
+                })
+            ]
+        }))
+
     return gulp.src('./index.html')
-        .pipe(inject(series(vendor, app), { name: 'bundle', relative: true, ignorePath: 'dist' }))
+        .pipe(inject(series(vendor, app), {
+            name: 'bundle',
+            relative: true,
+            ignorePath: 'dist'
+        }))
+        //.pipe(inject(gulp.src('./dist/*.css')))
         .pipe(gulp.dest('./dist'))
 });
 

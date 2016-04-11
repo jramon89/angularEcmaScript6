@@ -1,12 +1,22 @@
-import controller from '../controllers/layout.controller';
-import style from '../styles/layout.styl';
+'use strict';
+
+class layout$1{
+	constructor(){
+		this.text='Layout';
+		
+	}
+	fn(){
+		alert(this.text);
+	}
+}
+
 let config = function($urlRouterProvider, $stateProvider) {
     $urlRouterProvider.otherwise('/');
     $stateProvider
         .state('home', {
             url: '/',
             template: '<h1><a href="#" ng-click="vm.fn()">{{vm.text}} </a></h1>',
-            controller,
+            controller: layout$1,
             controllerAs: 'vm'
 
         })
@@ -14,4 +24,12 @@ let config = function($urlRouterProvider, $stateProvider) {
 
 config.$inject = ['$urlRouterProvider', '$stateProvider'];
 
-export default config;
+let layout = angular.module('layout', [])
+layout.config(config)
+
+let modules = angular.module('modules', [layout.name]);
+
+angular.module('app', [
+    'ui.router',
+    modules.name
+])
