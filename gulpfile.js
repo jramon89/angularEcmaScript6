@@ -6,38 +6,31 @@ let gulp = require('gulp'),
     concat = require('gulp-concat'),
     series = require('stream-series'),
     //event = require('event-stream'),
+    merge = require('merge-stream'),
     //source = require('vinyl-source-stream'),
     rollup = require('gulp-rollup'),
+    stylus = require('gulp-stylus'),
+    cssConcat = require('gulp-concat-css'),
     //rollup = require('rollup'),
     //rollupStream = require('rollup-stream'),
     //rollupBabel = require('rollup-plugin-babel'),
     rollupPaths = require('rollup-plugin-includepaths'),
     common = require('rollup-plugin-commonjs'),
-    npm = require('rollup-plugin-npm'),
-    css = require('rollup-plugin-stylus-css-modules'),
+    //npm = require('rollup-plugin-npm'),
+    //css = require('rollup-plugin-stylus-css-modules'),
     //external = require('rollup-plugin-external'),
     //resolve = require('rollup-plugin-node-resolve'),
     sync = require('browser-sync'),
     libs = require('./lib.paths.js')
 
-
-gulp.task('libs', function() {
-    let vendor = gulp.src(libs)
-        .pipe(concat('libs.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest('./dist'))
-
-})
-
 gulp.task('dist', function() {
 
-    let vendor = gulp.src(libs)
+    let vendor = gulp.src(libs.js)
         .pipe(concat('libs.js'))
         .pipe(uglify())
         .pipe(gulp.dest('./dist'))
 
-    //let styles = ;
-    let app = gulp.src(['./app/*.js'])
+    let appJs = gulp.src('./app/*.js')
         .pipe(rollup({
             format: 'cjs',
             plugins: [
@@ -54,24 +47,35 @@ gulp.task('dist', function() {
         .pipe(uglify())
         .pipe(gulp.dest('./dist'))
 
-    let style = gulp.src(['./app/*.js'])
-        .pipe(rollup({
-            plugins: [
-                rollupPaths(),
-                css({
-                    output: './dist/styles.css'
-                })
-            ]
-        }))
+    let css = {
+        libs: function() {
+            let libCss = gulp.src(libs.css)
+            return libCss;
+        },
+        app: function() {
+            let appCss = gulp.src('./app/*.styl')
+                .pipe(stylus())
+            return appCss;
+        },
+        merge: function() {
+            let min = merge(css.libs(), css.app())
+                .pipe(cssConcat('min.css'))
+                .pipe(gulp.dest('./dist'))
+            return min;
+        }
+
+    }
 
     return gulp.src('./index.html')
-        .pipe(inject(series(vendor, app), {
+        .pipe(inject(series(vendor, appJs), {
             name: 'bundle',
             relative: true,
             ignorePath: 'dist'
         }))
-        //.pipe(inject(gulp.src('./dist/*.css')))
+        .pipe(inject(css.merge(), { relative: true, ignorePath: 'dist' }))
         .pipe(gulp.dest('./dist'))
+
+
 });
 
 gulp.task('watch', function() {
@@ -87,8 +91,6 @@ gulp.task('serve', ['dist'], function() {
 });
 
 gulp.task('default', ['serve', 'watch'])
-
-
 
 /*gulp.task('es6', function() {
     return gulp.src('app/app.js', { read: false })
